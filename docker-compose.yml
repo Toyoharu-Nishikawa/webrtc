@@ -1,0 +1,26 @@
+#version: "3.9"
+
+services:
+  server:
+#    image: node:25
+    build: ./server
+    container_name: webrtc-server
+    network_mode: host
+    working_dir: /usr/src/app
+    volumes:
+      - ./server:/usr/src/app
+      - ./server/public:/usr/src/app/public
+#      - /dev/video0:/dev/video0
+    ports:
+      - "3000:3000"
+#    ports:
+#      - "3000:3000/tcp"  # シグナリング用（WebSocket/HTTP）
+#      - "8555:8555/tcp"  # WebRTCサーバー（例: MediaMTXやJanusの場合）
+#      - "8555:8555/udp"  # WebRTCのUDPエンドポイント
+#      - "50000-60000:50000-60000/udp"  # RTP/RTCPの範囲（コードやサーバー設定による）
+    environment:
+      - EXTERNAL_IP=192.168.191.32  # WSL2のホストIPを指定（後述）
+    devices:
+      - "/dev/video0:/dev/video0" # ホストのWebカメラを渡す
+    command: node index.js
+    privileged: true
