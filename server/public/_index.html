@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WebRTC Camera Stream</title>
+</head>
+<body>
+  <h1>WebRTC Live Stream</h1>
+  <video id="video" autoplay playsinline></video>
+
+  <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const video = document.getElementById("video");
+
+    async function start() {
+      const pc = new RTCPeerConnection();
+
+
+      pc.ontrack = (event) => {
+        video.srcObject = event.streams[0];
+      };
+
+      const offer = await pc.createOffer();
+      console.log("create offer")
+      await pc.setLocalDescription(offer);
+      console.log("setLocalDescription")
+
+      socket.on("answer", async (answer) => {
+      //  await pc.setRemoteDescription(answer);
+        // ICE gathering 完了まで待つ
+        console.log("on answer")
+        await pc.setLocalDescription(answer);
+        console.log("pc.setLocalDescription(answer);")
+      });
+
+      socket.on("ice-candidate", async (candidate) => {
+        console.log("ice-candidate")
+        await pc.addIceCandidate(candidate);
+      });
+
+      pc.onicecandidate = (event) => {
+        console.log("on ice-candidate")
+        if (event.candidate) {
+          socket.emit("ice-candidate", event.candidate);
+        }
+      };
+    }
+    
+   console.log("start")
+    start();
+  </script>
+</body>
+</html>
